@@ -181,12 +181,12 @@
     const UPLOAD_PASSWORD = "myupload123";
     const DOWNLOAD_PASSWORD = "mydownload123";
 
-    // 2. Supabase Credentials (Replace with your own)
-    const SUPABASE_URL = "https://dtrvsjgfnnvtsbzvdbax.supabase.co/rest/v1/";
+    // 2. Corrected Supabase Base URL & Key
+    const SUPABASE_URL = "https://dtrvsjgfnnvtsbzvdbax.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR0cnZzamdmbm52dHNienZkYmF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg4NDY2NDAsImV4cCI6MjEwNDQyMjY0MH0.9L379syDIznzM6cQUl6x_Z5Pd3JLCMA4LwJfZvR9mw4";
     const BUCKET_NAME = "vault";
 
-    // Initialize Supabase
+    // Initialize Supabase Client
     let client = null;
     try {
       if (window.supabase) {
@@ -230,7 +230,7 @@
 
       if (!client) {
         status.style.color = "#ff5555";
-        status.innerText = "Supabase not connected. Check URL & Key.";
+        status.innerText = "Supabase connection error. Check credentials.";
         return;
       }
 
@@ -276,7 +276,7 @@
 
       if (!client) {
         status.style.color = "#ff5555";
-        status.innerText = "Supabase not connected. Check URL & Key.";
+        status.innerText = "Supabase connection error. Check credentials.";
         return;
       }
 
