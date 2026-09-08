@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="ta">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Secure File Vault</title>
+  <!-- Supabase JS Client -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    body {
+      background-color: #0b1320;
+      color: #ffffff;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .vault-card {
+      background-color: #162238;
+      border: 1px solid #22324f;
+      border-radius: 16px;
+      padding: 40px 30px;
+      width: 100%;
+      max-width: 500px;
+      text-align: center;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    }
+
+    .icon-lock {
+      font-size: 28px;
+      margin-bottom: 8px;
+    }
+
+    h1 {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .sub-text {
+      color: #8b9bb4;
+      font-size: 14px;
+      margin-bottom: 18px;
+    }
+
+    .prompt-text {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 24px;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background-color: #1a6cf0;
+      color: #ffffff;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+    }
+
+    .btn:hover {
+      background-color: #1557c0;
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .btn-secondary {
+      background-color: #2a3952;
+      color: #cfd9e8;
+    }
+
+    .btn-secondary:hover {
+      background-color: #384b6b;
+    }
+
+    /* Section Panels */
+    .section-panel {
+      display: none;
+      margin-top: 24px;
+      padding-top: 20px;
+      border-top: 1px solid #22324f;
+      text-align: left;
+    }
+
+    .input-box {
+      width: 100%;
+      padding: 12px;
+      background-color: #0d1726;
+      border: 1px solid #2a3b5c;
+      border-radius: 8px;
+      color: #fff;
+      font-size: 14px;
+      margin-bottom: 12px;
+      outline: none;
+    }
+
+    .input-box:focus {
+      border-color: #1a6cf0;
+    }
+
+    .file-input {
+      color: #8b9bb4;
+      margin-bottom: 12px;
+    }
+
+    .status-msg {
+      margin-top: 10px;
+      font-size: 13px;
+      text-align: center;
+    }
+
+    .file-list {
+      list-style: none;
+      margin-top: 15px;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    .file-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 12px;
+      background: #0d1726;
+      border-radius: 6px;
+      margin-bottom: 6px;
+      font-size: 13px;
+    }
+
+    .file-item a {
+      color: #3b82f6;
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .file-item a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="vault-card">
+    <div class="icon-lock">🔐</div>
+    <h1>Secure File Vault</h1>
+    <p class="sub-text">Private • Secure • Simple</p>
+    <p class="prompt-text">What do you want to do?</p>
+
+    <!-- Main Navigation Buttons -->
+    <div class="btn-group">
+      <button class="btn" onclick="showPanel('upload')">📥 Upload (Add files)</button>
+      <button class="btn" onclick="showPanel('download')">📤 Download (Access files)</button>
+    </div>
+
+    <!-- Upload Panel -->
+    <div id="upload-panel" class="section-panel">
+      <h3 style="margin-bottom: 12px; font-size: 16px;">Upload Files</h3>
+      <input type="password" id="upload-pass" class="input-box" placeholder="Enter Upload Password" />
+      <input type="file" id="file-uploader" class="input-box file-input" />
+      <button class="btn" style="width: 100%; justify-content: center;" onclick="handleUpload()">Upload Now</button>
+      <div id="upload-status" class="status-msg"></div>
+    </div>
+
+    <!-- Download Panel -->
+    <div id="download-panel" class="section-panel">
+      <h3 style="margin-bottom: 12px; font-size: 16px;">View & Download Files</h3>
+      <input type="password" id="download-pass" class="input-box" placeholder="Enter Download Password" />
+      <button class="btn" style="width: 100%; justify-content: center;" onclick="handleDownloadList()">Unlock & View Files</button>
+      <div id="download-status" class="status-msg"></div>
+      
+      <ul id="files-container" class="file-list"></ul>
+    </div>
+  </div>
+
+  <script>
+    // -------------------------------------------------------------
+    // 1. Set your Password here (Simple password logic)
+    // -------------------------------------------------------------
+    const UPLOAD_PASSWORD = "myupload123";      // Ungaloda upload password
+    const DOWNLOAD_PASSWORD = "mydownload123";  // Ungaloda download password
+
+    // -------------------------------------------------------------
+    // 2. Supabase Config (Free Storage bucket)
+    // -------------------------------------------------------------
+    const SUPABASE_URL = "YOUR_SUPABASE_PROJECT_URL";
+    const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
+    const BUCKET_NAME = "vault-files"; // Unga Supabase bucket name
+
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // Toggle panels
+    function showPanel(type) {
+      document.getElementById("upload-panel").style.display = (type === 'upload') ? 'block' : 'none';
+      document.getElementById("download-panel").style.display = (type === 'download') ? 'block' : 'none';
+    }
+
+    // Handle Upload
+    async function handleUpload() {
+      const pass = document.getElementById("upload-pass").value;
+      const fileInput = document.getElementById("file-uploader");
+      const status = document.getElementById("upload-status");
+
+      if (pass !== UPLOAD_PASSWORD) {
+        status.style.color = "#ff5555";
+        status.innerText = "❌ Incorrect Upload Password!";
+        return;
+      }
+
+      if (!fileInput.files || fileInput.files.length === 0) {
+        status.style.color = "#ffaa00";
+        status.innerText = "⚠️ Please select a file first!";
+        return;
+      }
+
+      const file = fileInput.files[0];
+      const fileName = `${Date.now()}_${file.name}`;
+      status.style.color = "#3b82f6";
+      status.innerText = "Uploading... please wait.";
+
+      const { data, error } = await supabase.storage
+        .from(BUCKET_NAME)
+        .upload(fileName, file);
+
+      if (error) {
+        status.style.color = "#ff5555";
+        status.innerText = "Upload failed: " + error.message;
+      } else {
+        status.style.color = "#4ade80";
+        status.innerText = "✅ File uploaded successfully!";
+        fileInput.value = "";
+      }
+    }
+
+    // Handle Download List
+    async function handleDownloadList() {
+      const pass = document.getElementById("download-pass").value;
+      const status = document.getElementById("download-status");
+      const listContainer = document.getElementById("files-container");
+
+      listContainer.innerHTML = "";
+
+      if (pass !== DOWNLOAD_PASSWORD) {
+        status.style.color = "#ff5555";
+        status.innerText = "❌ Incorrect Download Password!";
+        return;
+      }
+
+      status.style.color = "#3b82f6";
+      status.innerText = "Fetching files...";
+
+      const { data, error } = await supabase.storage.from(BUCKET_NAME).list();
+
+      if (error) {
+        status.style.color = "#ff5555";
+        status.innerText = "Error loading files: " + error.message;
+        return;
+      }
+
+      if (data.length === 0) {
+        status.style.color = "#ffaa00";
+        status.innerText = "No files found in vault.";
+        return;
+      }
+
+      status.innerText = "";
+      data.forEach(item => {
+        if (item.name === ".emptyFolderPlaceholder") return;
+
+        const { data: publicUrlData } = supabase.storage
+          .from(BUCKET_NAME)
+          .getPublicUrl(item.name);
+
+        const li = document.createElement("li");
+        li.className = "file-item";
+        li.innerHTML = `
+          <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 250px;">📄 ${item.name}</span>
+          <a href="${publicUrlData.publicUrl}" target="_blank" download>Download</a>
+        `;
+        listContainer.appendChild(li);
+      });
+    }
+  </script>
+</body>
+</html>
