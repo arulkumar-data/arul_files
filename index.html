@@ -92,6 +92,14 @@
       text-align: left;
     }
 
+    /* Password Input Wrapper */
+    .password-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
     .input-box {
       width: 100%;
       padding: 12px;
@@ -100,8 +108,33 @@
       border-radius: 8px;
       color: #fff;
       font-size: 14px;
-      margin-bottom: 12px;
       outline: none;
+    }
+
+    .password-wrapper .input-box {
+      padding-right: 42px;
+    }
+
+    .toggle-pass-btn {
+      position: absolute;
+      right: 12px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #8b9bb4;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      user-select: none;
+    }
+
+    .toggle-pass-btn:hover {
+      color: #ffffff;
+    }
+
+    .file-input {
+      margin-bottom: 12px;
     }
 
     .input-box:focus {
@@ -160,8 +193,11 @@
     <!-- Upload Box -->
     <div id="upload-panel" class="section-panel">
       <h3 style="margin-bottom: 12px; font-size: 15px;">Upload Files</h3>
-      <input type="password" id="upload-pass" class="input-box" placeholder="Enter Upload Password" />
-      <input type="file" id="file-uploader" class="input-box" />
+      <div class="password-wrapper">
+        <input type="password" id="upload-pass" class="input-box" placeholder="Enter Upload Password" />
+        <button type="button" class="toggle-pass-btn" onclick="togglePassword('upload-pass', this)" title="Show/Hide Password">👁️</button>
+      </div>
+      <input type="file" id="file-uploader" class="input-box file-input" />
       <button class="btn" id="btn-submit-upload" style="width: 100%; justify-content: center;">Upload Now</button>
       <div id="upload-status" class="status-msg"></div>
     </div>
@@ -169,7 +205,10 @@
     <!-- Download Box -->
     <div id="download-panel" class="section-panel">
       <h3 style="margin-bottom: 12px; font-size: 15px;">Access Files</h3>
-      <input type="password" id="download-pass" class="input-box" placeholder="Enter Download Password" />
+      <div class="password-wrapper">
+        <input type="password" id="download-pass" class="input-box" placeholder="Enter Download Password" />
+        <button type="button" class="toggle-pass-btn" onclick="togglePassword('download-pass', this)" title="Show/Hide Password">👁️</button>
+      </div>
       <button class="btn" id="btn-submit-download" style="width: 100%; justify-content: center;">Unlock & View Files</button>
       <div id="download-status" class="status-msg"></div>
       <ul id="files-container" class="file-list"></ul>
@@ -178,10 +217,10 @@
 
   <script>
     // 1. Password Config
-    const UPLOAD_PASSWORD = "arul_upload";
-    const DOWNLOAD_PASSWORD = "arul_download";
+    const UPLOAD_PASSWORD = "myupload123";
+    const DOWNLOAD_PASSWORD = "mydownload123";
 
-    // 2. Corrected Supabase Base URL & Key
+    // 2. Supabase Credentials
     const SUPABASE_URL = "https://dtrvsjgfnnvtsbzvdbax.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR0cnZzamdmbm52dHNienZkYmF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg4NDY2NDAsImV4cCI6MjEwNDQyMjY0MH0.9L379syDIznzM6cQUl6x_Z5Pd3JLCMA4LwJfZvR9mw4";
     const BUCKET_NAME = "vault";
@@ -194,6 +233,18 @@
       }
     } catch (e) {
       console.error("Supabase init error:", e);
+    }
+
+    // Toggle Password Visibility Function
+    function togglePassword(inputId, btn) {
+      const input = document.getElementById(inputId);
+      if (input.type === "password") {
+        input.type = "text";
+        btn.innerText = "🙈";
+      } else {
+        input.type = "password";
+        btn.innerText = "👁️";
+      }
     }
 
     // Panel Toggle Logic
